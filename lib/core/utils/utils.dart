@@ -1,5 +1,5 @@
+import 'package:co_workspace/core/config/config.dart';
 import 'package:flutter/material.dart';
-
 
 sW(context) => MediaQuery.of(context).size.width;
 sH(context) => MediaQuery.of(context).size.height;
@@ -17,11 +17,6 @@ error(String error, {required onPressed}) {
       crossAxisAlignment: CrossAxisAlignment.center,
       spacing: 10,
       children: [
-       // SvgPicture.asset("assets/images/error.gif", height: 200),
-        // Image.asset(
-        //       "assets/images/error.gif",
-        //       height: 200,
-        //     ),
         ElevatedButton.icon(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
@@ -30,7 +25,7 @@ error(String error, {required onPressed}) {
             ),
             minimumSize: Size(120, 40),
             foregroundColor: Colors.white,
-            backgroundColor: Colors.black,
+            backgroundColor: Config.greenClr,
           ),
           label: Text("Retry"),
           icon: Icon(Icons.restore_outlined, color: Colors.white),
@@ -41,9 +36,9 @@ error(String error, {required onPressed}) {
   );
 }
 
-scafolderror(String error, txt, {required onPressed}) {
+scafolderror(String error, {required onPressed}) {
   return Scaffold(
-    appBar: AppBar(title: Text(txt)),
+    backgroundColor: Colors.white,
     body: Center(
       child: SingleChildScrollView(
         child: Column(
@@ -51,9 +46,7 @@ scafolderror(String error, txt, {required onPressed}) {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // SvgPicture.asset("assets/images/error.gif",
-            //   height: 200,),
-            Image.asset("assets/images/error.gif", height: 200),
+           
             ElevatedButton.icon(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
@@ -62,7 +55,7 @@ scafolderror(String error, txt, {required onPressed}) {
                 ),
                 minimumSize: Size(120, 40),
                 foregroundColor: Colors.white,
-                backgroundColor: Colors.black,
+                backgroundColor: Config.greenClr,
               ),
               label: Text("Retry"),
               icon: Icon(Icons.restore_outlined, color: Colors.white),
@@ -83,13 +76,13 @@ Widget loading({clr}) => Center(
   ),
 );
 
-Widget scafoldloading({clr, txt}) => Scaffold(
-  appBar: AppBar(title: Text(txt)),
+Widget scafoldloading() => Scaffold(
+  backgroundColor: Colors.white,
   body: Center(
     child: CircularProgressIndicator(
       strokeWidth: .5,
       strokeAlign: 10,
-      color: clr,
+      color: Config.greenClr,
     ),
   ),
 );

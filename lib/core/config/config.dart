@@ -4,6 +4,8 @@ class Config {
    static const violetClr = Color.fromARGB(255, 170, 7, 222); 
    static const greenClr = Color.fromARGB(255, 75, 236, 113); 
    static const greyClr = Colors.blueGrey; 
+   static const grey2Clr = Colors.grey; 
+
 
    
     //rgba(170,7,222,255)

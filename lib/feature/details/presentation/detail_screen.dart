@@ -1,13 +1,18 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:co_workspace/common/int_cubit.dart';
+import 'package:co_workspace/common/cubits/int_cubit.dart';
+import 'package:co_workspace/common/entity/space_entity.dart';
 import 'package:co_workspace/core/config/config.dart';
 import 'package:co_workspace/core/utils/utils.dart';
+import 'package:co_workspace/feature/details/logic/detail_cubit.dart';
+import 'package:co_workspace/feature/details/presentation/widgets/detail_widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class DetailScreen extends StatefulWidget {
-  const DetailScreen({super.key});
+  final String id;
+  const DetailScreen({super.key, required this.id});
 
   @override
   State<DetailScreen> createState() => _DetailScreenState();
@@ -16,6 +21,14 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   CarouselSliderController controller = CarouselSliderController();
 
+  TextEditingController nameCntr = TextEditingController();
+  TextEditingController timeCntr = TextEditingController();
+  TextEditingController sdateCntr = TextEditingController();
+  TextEditingController eDateCntr = TextEditingController();
+  TextEditingController seatCntr = TextEditingController();
+
+  GlobalKey<FormState> fKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     context.read<IntCubit>().update(0);
@@ -23,35 +36,91 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   @override
+  void dispose() {
+    nameCntr.dispose();
+    timeCntr.dispose();
+    sdateCntr.dispose();
+    eDateCntr.dispose();
+    seatCntr.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return BlocBuilder<DetailCubit, DetailState>(
+      builder: (context, state) {
+        switch (state) {
+          case Loading _:
+            return scafoldloading();
+          case Error e:
+            return scafolderror(
+              e.error,
+              onPressed: () => context.read<DetailCubit>().getDetail(widget.id),
+            );
+
+          case Detail d:
+            return body(d.detail);
+          default:
+            return scafoldloading();
+        }
+      },
+    );
+  }
+
+  Widget body(SpaceEntity detail) {
     return Scaffold(
       backgroundColor: Colors.white,
-      bottomNavigationBar: btmNav(),
+      bottomNavigationBar: btmNav(detail),
       body: ListView(
         shrinkWrap: true,
         physics: const ScrollPhysics(),
         children: [
-          CarouselSlider(
-            carouselController: controller,
-            options: CarouselOptions(
-              onPageChanged: (index, reason) {
-                context.read<IntCubit>().update(index);
-              },
-              // enlargeCenterPage: true,
-              height: sH(context) / 2.5,
-              autoPlayAnimationDuration: const Duration(seconds: 2),
-              aspectRatio: 1,
-              // autoPlay: true,
-              viewportFraction: 1,
-            ),
-            items: ["1", "2"].map((i) {
-              return Image.asset(
-                "assets/images/$i.jpg",
-                // height: sH(context) / 3,
-                width: sW(context),
-                fit: BoxFit.cover,
-              );
-            }).toList(),
+          Stack(
+            children: [
+              CarouselSlider(
+                carouselController: controller,
+                options: CarouselOptions(
+                  onPageChanged: (index, reason) {
+                    context.read<IntCubit>().update(index);
+                  },
+                  // enlargeCenterPage: true,
+                  height: sH(context) / 2.5,
+                  autoPlayAnimationDuration: const Duration(seconds: 2),
+                  aspectRatio: 1,
+                  // autoPlay: true,
+                  viewportFraction: 1,
+                ),
+                items: detail.images.map((i) {
+                  return Image.asset(
+                    "assets/images/$i",
+                    // height: sH(context) / 3,
+                    width: sW(context),
+                    fit: BoxFit.cover,
+                  );
+                }).toList(),
+              ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: GestureDetector(
+                  onTap: () => navigatorKey.currentState!.pop(),
+                  child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      size: 25,
+                      color: Config.greenClr,
+                    ),
+                  ),
+                ),
+              ),
+             
+            ],
           ),
           spaceHeight(10),
           BlocBuilder<IntCubit, int>(
@@ -61,9 +130,9 @@ class _DetailScreenState extends State<DetailScreen> {
                 shrinkWrap: true,
                 scrollDirection: Axis.horizontal,
                 physics: const ScrollPhysics(),
-                itemCount: ["1", "2"].length,
+                itemCount: detail.images.length,
                 itemBuilder: (context, index) {
-                  var data = ["1", "2"][index];
+                  var data = detail.images[index];
                   return GestureDetector(
                     onTap: () {
                       controller.jumpToPage(index);
@@ -87,10 +156,10 @@ class _DetailScreenState extends State<DetailScreen> {
                               ]
                             : [],
                         border: intstate == index
-                            ? Border.all(color: Colors.white)
+                            ? Border.all(color: Config.greenClr)
                             : null,
                         image: DecorationImage(
-                          image: AssetImage("assets/images/$data.jpg"),
+                          image: AssetImage("assets/images/$data"),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -102,10 +171,10 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
 
           spaceHeight(5),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 10),
             child: Text(
-              "NAME",
+              detail.name,
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
             ),
           ),
@@ -115,15 +184,14 @@ class _DetailScreenState extends State<DetailScreen> {
               spaceWidth(10),
               Icon(CupertinoIcons.location, color: Config.greenClr, size: 15),
               spaceWidth(5),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  "LOCATION",
+                  detail.location,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 11, ),
+                  style: TextStyle(fontSize: 11),
                 ),
               ),
-              
             ],
           ),
           spaceHeight(15),
@@ -137,20 +205,22 @@ class _DetailScreenState extends State<DetailScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5),
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(color: Config.greenClr,blurRadius: .5)
-                ],
-                
-               
+                boxShadow: [BoxShadow(color: Config.greenClr, blurRadius: .5)],
               ),
               child: Row(
                 children: [
-                  tile(title: "Hot Desks", ic: CupertinoIcons.decrease_indent),
-                  vertiDiv(),
-                  tile(title: "Event Space", ic: Icons.event),
-                  vertiDiv(),
-                 
-                  tile(title: "200 sq.ft", ic: Icons.square_foot),
+                  DetailWidgets().tile(
+                    title: "Hot Desks",
+                    ic: CupertinoIcons.decrease_indent,
+                  ),
+                  DetailWidgets().vertiDiv(),
+                  DetailWidgets().tile(title: "Event Space", ic: Icons.event),
+                  DetailWidgets().vertiDiv(),
+
+                  DetailWidgets().tile(
+                    title: "200 sq.ft",
+                    ic: Icons.square_foot,
+                  ),
                 ],
               ),
             ),
@@ -168,12 +238,9 @@ class _DetailScreenState extends State<DetailScreen> {
               ),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              '''Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. ''',
-              style: TextStyle(fontSize: 11, ),
-            ),
+            child: Text(detail.discription, style: TextStyle(fontSize: 11)),
           ),
 
           spaceHeight(2),
@@ -192,10 +259,10 @@ class _DetailScreenState extends State<DetailScreen> {
           GridView.builder(
             shrinkWrap: true,
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            itemCount: amentiesList.length,
+            itemCount: detail.amenities.length,
             physics: const ScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
+              crossAxisCount: 3,
               // childAspectRatio: 3 / 2,
               childAspectRatio: 1, //1/2
               mainAxisExtent: 40,
@@ -203,27 +270,19 @@ class _DetailScreenState extends State<DetailScreen> {
               mainAxisSpacing: 0,
             ),
             itemBuilder: (context, index) {
-              var data = amentiesList[index];
+              var data = detail.amenities[index];
 
-              return Container(
-                padding: const EdgeInsets.all(5),
-                margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                height: 50,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                  // boxShadow: [
-                  //   BoxShadow([200]!, blurRadius: 1),
-                  // ],
+              return Chip(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadiusGeometry.circular(10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(data['ic'], size: 20, ),
-                    spaceWidth(10),
-                    Text(data['name'], style: const TextStyle(fontSize: 11)),
-                  ],
-                ),
+                shadowColor: Config.greenClr,
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.white,
+
+                side: BorderSide(color: Config.greenClr),
+
+                label: Text(data, style: const TextStyle(fontSize: 11)),
               );
             },
           ),
@@ -242,117 +301,215 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
 
           spaceHeight(10),
-          detailType(title: "Type", val: "Villa"),
-          detailType(title: "Furnishing", val: "Furnished"),
-          detailType(title: "Rent Type", val: "Monthly"),
-          detailType(title: "Security Period", val: "3 month"),
-          detailType(title: "Security Amount", val: "\$1000"),
-          detailType(title: "landlord Name", val: "Hari"),
-          detailType(title: "landlord Number", val: "984562317"),
-        ],
-      ),
-    );
-  }
+          DetailWidgets().detailType(title: "Type", val: "Co workspace"),
+          DetailWidgets().detailType(title: "Capacity", val: detail.capacity),
 
-  Expanded tile({required title, required ic}) {
-    return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(ic, size: 15, ),
-          spaceHeight(5),
-          Text(title, style: const TextStyle(fontSize: 11, )),
-        ],
-      ),
-    );
-  }
+          DetailWidgets().detailType(title: "Furnishing", val: "Furnished"),
+          DetailWidgets().detailType(title: "Rent Type", val: "Monthly"),
+          DetailWidgets().detailType(title: "Security Period", val: "3 month"),
+          DetailWidgets().detailType(
+            title: "Security Amount",
+            val: "\$${detail.pricePerHour}",
+          ),
+          DetailWidgets().detailType(title: "Owner Name", val: detail.owner),
+          DetailWidgets().detailType(
+            title: "Phone Number",
+            val: detail.phoneNumber,
+          ),
 
-  Padding vertiDiv() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
-      child: VerticalDivider(color: Config.baseClr),
-    );
-  }
+          spaceHeight(15),
 
-  final List<Map> amentiesList = [
-    {"name": "Power Backup", "ic": Icons.battery_full_rounded},
-    {"name": "Lockers", "ic": CupertinoIcons.lock},
-    {"name": "Parking", "ic": Icons.local_parking},
-    {"name": "Wifi", "ic": Icons.wifi},
-    {"name": "Pantry", "ic": Icons.food_bank},
-    {"name": "Lounge Areas", "ic": Icons.star},
-   
-
-  ];
-
-  Padding detailType({required title, required val}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
-      child: Row(
-        children: [
-          Expanded(
+          const Padding(
+            padding: EdgeInsets.all(8.0),
             child: Text(
-              title,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+              "Privacy Policy",
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 12,
+                color: Config.baseClr,
+              ),
             ),
           ),
-          Expanded(child: Text(val, style: const TextStyle(fontSize: 10))),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(detail.privacy, style: TextStyle(fontSize: 11)),
+          ),
         ],
       ),
     );
   }
 
+  Widget btmNav(SpaceEntity detail) => BottomAppBar(
+    surfaceTintColor: Colors.white,
+    color: Colors.white,
+    elevation: 10,
+    height: kTextTabBarHeight + 15,
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                "\$ ${detail.pricePerHour}/Hour",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                "+3 month security deposit",
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ElevatedButton(
+            onPressed: () async {
+              nameCntr.clear();
+              timeCntr.clear();
+              sdateCntr.clear();
+              eDateCntr.clear();
+              seatCntr.clear();
+              bookSheet(context, detail);
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5),
+              ),
+              backgroundColor: Config.greenClr,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Book now", style: TextStyle(fontSize: 12)),
+          ),
+        ),
+      ],
+    ),
+  );
 
+  Future<dynamic> bookSheet(BuildContext context, SpaceEntity data) {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        insetPadding: EdgeInsets.all(10),
+        backgroundColor: Colors.white,
+        titlePadding: EdgeInsets.all(20),
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Config.baseClr,
+        ),
+        title: Text("Book"),
+        contentPadding: EdgeInsets.all(10),
 
-
-
-
-
-
-
-  Widget btmNav() => BottomAppBar(
-        surfaceTintColor: Colors.white,
-        color: Colors.white,
-        elevation: 10,
-        height: kTextTabBarHeight + 15,
-        child: Row(
-          children: [
-            Expanded(
+        content: SizedBox(
+          width: sW(context),
+          child: Form(
+            key: fKey,
+            child: SingleChildScrollView(
+              physics: const ScrollPhysics(),
+              scrollDirection: Axis.vertical,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: const [
-                  Text(
-                    "\$ 500/Month",
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                spacing: 10,
+                children: [
+                  DetailWidgets().field(
+                    cntr: nameCntr,
+                    txt: "Name",
+                    isRead: false,
+                    isIc: true,
+                    ic: Icons.person,
                   ),
-                  Text(
-                    "+3 month security deposit",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w400),
-                  )
+                  DetailWidgets().field(
+                    cntr: seatCntr,
+                    txt: "Seats",
+                    isRead: false,
+                    isIc: true,
+                    isNum: true,
+                    ic: Icons.cabin,
+                  ),
+
+                  DetailWidgets().field(
+                    cntr: sdateCntr,
+                    txt: "Start Date",
+                    isRead: true,
+                    isIc: true,
+                    isNum: true,
+                    isTrail: true,
+                    ic: Icons.calendar_month,
+                    ontap: () {
+                      DetailWidgets().date(
+                        context,
+                        cntr: sdateCntr,
+                        firstdate: DateTime(DateTime.now().year),
+                        lastdate: DateTime(DateTime.now().year + 2),
+                      );
+                    },
+                  ),
+
+                  DetailWidgets().field(
+                    cntr: eDateCntr,
+                    txt: "End Date",
+                    isRead: true,
+                    isIc: true,
+                    isNum: true,
+                    isTrail: true,
+                    ic: Icons.calendar_month,
+                    ontap: () {
+                      DetailWidgets().date(
+                        context,
+                        cntr: eDateCntr,
+                        firstdate: DateTime(DateTime.now().day),
+                        lastdate: DateTime(DateTime.now().year + 2),
+                      );
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      DetailWidgets().text(
+                        txt: "Close",
+                        onPressed: () {
+                          navigatorKey.currentState!.pop();
+                        },
+                        color: Colors.red,
+                      ),
+
+                      DetailWidgets().normal(
+                        size: Size(100, 35),
+
+                        txt: "Book",
+                        onPressed: () async {
+                          if (fKey.currentState!.validate()) {
+                            EasyLoading.show();
+                            var res = await context.read<DetailCubit>().book(
+                              detail: data,
+                              edate: eDateCntr.text,
+                              name: nameCntr.text,
+                              noSeats: seatCntr.text,
+                              sdate: sdateCntr.text,
+                              time: timeCntr.text,
+                            );
+
+                            if (res['status'] == "ok") {
+                              EasyLoading.dismiss();
+                              EasyLoading.showSuccess("successfully booked !!");
+                              navigatorKey.currentState!.pop();
+                            } else {
+                              EasyLoading.dismiss();
+                              EasyLoading.showError(res['error']);
+                            }
+                          }
+                        },
+                        color: Config.greenClr,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  
-                },
-                style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    backgroundColor: Config.greenClr,
-                    foregroundColor: Colors.white),
-                child:  const Text(
-                        "Book now",
-                        style: TextStyle(
-                          fontSize: 12,
-                        ),
-                      ),
-              ),
-            )
-          ],
+          ),
         ),
-      );
+      ),
+    );
+  }
 }

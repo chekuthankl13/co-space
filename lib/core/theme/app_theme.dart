@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -10,11 +9,11 @@ class AppTheme {
     shadowColor: Colors.transparent,
     hoverColor: Colors.black12.withAlpha(5),
     appBarTheme: const AppBarTheme(
-      titleTextStyle: TextStyle(fontSize: 18, color: Colors.white),
+      titleTextStyle: TextStyle(fontSize: 18, color: Colors.black),
       surfaceTintColor: Colors.transparent,
       // backgroundColor: Config.baseClr,
       elevation: 0,
-      foregroundColor: Colors.white,
+      // foregroundColor: Colors.white,
     ),
   );
 }
