@@ -17,7 +17,7 @@ class DetailLocalDataSourceImpl extends DetailLocalDataSource {
   @override
   Future<SpaceEntityModel> getDetail({required String id}) async {
     try {
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(Duration(seconds: 1));
       var res = DummyData.spaces
           .where((element) => element['id'] == id)
           .toList();

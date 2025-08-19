@@ -5,6 +5,7 @@ import 'package:co_workspace/feature/details/logic/detail_cubit.dart';
 import 'package:co_workspace/feature/details/presentation/detail_screen.dart';
 import 'package:co_workspace/feature/home/logic/cubit/home_cubit.dart';
 import 'package:co_workspace/feature/home/presentation/home_screen.dart';
+import 'package:co_workspace/feature/map/presentation/map_screen.dart';
 import 'package:co_workspace/feature/search/logic/search_cubit.dart';
 import 'package:co_workspace/feature/search/presentation/search_screen.dart';
 import 'package:co_workspace/feature/splash/splash_screen.dart';
@@ -51,10 +52,12 @@ class AppRoutes {
             child: SearchScreen(),
           ),
         );
+        case "/map":
+        return goToPage(MapScreen());
       default:
         return null;
     }
   }
 }
 
-goToPage(child) => PageTransition(type: PageTransitionType.fade, child: child);
+goToPage(child) => PageTransition(type: PageTransitionType.leftToRight, child: child);

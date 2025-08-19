@@ -15,7 +15,7 @@ class HomeLocalDataSourceImpl implements HomeLocalDataSource {
   @override
   Future<List<SpaceEntityModel>> loadSpaces() async {
     try {
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(Duration(seconds: 1));
       List<Map<String, dynamic>> res = DummyData.spaces;
 
       return res.map((e) => SpaceEntityModel.fromJson(e)).toList();

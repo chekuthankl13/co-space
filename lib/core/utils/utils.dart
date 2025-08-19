@@ -68,7 +68,7 @@ scafolderror(String error, {required onPressed}) {
   );
 }
 
-Widget loading({clr}) => Center(
+Widget loading({clr = Config.greenClr}) => Center(
   child: CircularProgressIndicator(
     strokeWidth: .5,
     strokeAlign: 10,

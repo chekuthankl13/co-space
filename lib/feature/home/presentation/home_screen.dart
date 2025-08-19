@@ -89,9 +89,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     : empty(),
               ),
               IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  navigatorKey.currentState!.pushNamed("/map");
+                },
                 icon: const Icon(
-                  Icons.notifications_active_outlined,
+                  Icons.location_on_outlined,
                   color: Config.greyClr,
                 ),
               ),
@@ -469,6 +471,14 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             title: "My Bookings",
             ic: CupertinoIcons.bookmark,
+          ),
+
+          tile(
+            onTap: () {
+            
+            },
+            title: "Notifications",
+            ic: CupertinoIcons.bell,
           ),
         ],
       ),
